@@ -1,7 +1,7 @@
 import React from 'react'
-import Card from '../components/Card/Card'
-import Values from '../constants/Values'
-import Suites from '../constants/Suites'
+import Card from '../../components/Card/Card'
+import Values from 'shared/constants/Values'
+import Suites from 'shared/constants/Suites'
 
 const Home = () => (
   <div>

@@ -34,6 +34,12 @@ const WEBPACK_CONFIG = {
     publicPath: '/'
   },
 
+  resolve: {
+    alias: {
+      shared: join(__dirname, '../shared')
+    }
+  },
+
   devServer: {
     port: devServerPort,
     host: '0.0.0.0',

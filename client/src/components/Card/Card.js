@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import Suites from '../../constants/Suites'
-import Values from '../../constants/Values'
+import Suites from 'shared/constants/Suites'
+import Values from 'shared/constants/Values'
 import './card.scss'
 
 export default class Card extends Component {
