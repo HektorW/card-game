@@ -1,0 +1,27 @@
+.round-stats {
+  left: calc(50% - 100px);
+  position: absolute;
+  top: 250px;
+
+  &__move {
+    left: 0;
+    position: absolute;
+    top: 0;
+
+    &--index-0 {
+      top: 175px;
+    }
+
+    &--index-1 {
+      left: -125px;
+    }
+
+    &--index-2 {
+      top: -175px;
+    }
+
+    &--index-3 {
+      left: 125px;
+    }
+  }
+}

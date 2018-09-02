@@ -1,7 +1,8 @@
 import React, { Component } from 'react'
 import socketIO from 'socket.io-client'
+import MyHandCards from '../../components/MyHandCards'
+import RoundStats from '../../components/RoundStats'
 import GameEvents from 'shared/constants/GameEvents'
-import Card from '../../components/Card'
 
 export default class Game extends Component {
   state = {
@@ -44,22 +45,35 @@ export default class Game extends Component {
       return <div>Game not loaded yet</div>
     }
 
+    if (gameState.winnerId) {
+      const winner =
+        gameState.winnerId === me.id
+          ? me
+          : others.find(other => other.id === gameState.winnerId)
+      return (
+        <div>
+          Winner is {winner === me ? 'you' : winner.id} with {winner.points}{' '}
+          points
+        </div>
+      )
+    }
+
     const isMyTurn = currentRound.nextPlayerId === me.id
+    const allPlayers = [me, ...others]
 
     return (
       <main className="game">
-        <div>Me: {me.id}</div>
-        {isMyTurn && <div>It's my turn</div>}
         <div>
-          {me.cards.map(card => (
-            <Card
-              key={`${card.suit}-${card.value}`}
-              suit={card.suit}
-              value={card.value}
-              onClick={isMyTurn ? () => this.onCardClick(card) : null}
-            />
-          ))}
+          Me: {me.id}, Points: {me.points}
         </div>
+        {isMyTurn && <div>It's my turn</div>}
+
+        <RoundStats round={currentRound} me={me} others={others} />
+
+        <MyHandCards
+          cards={me.cards}
+          onCardClick={isMyTurn ? this.onCardClick.bind(this) : null}
+        />
       </main>
     )
   }

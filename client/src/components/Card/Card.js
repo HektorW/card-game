@@ -4,6 +4,13 @@ import Suites from 'shared/constants/Suites'
 import Values from 'shared/constants/Values'
 import './card.scss'
 
+const UnicodeSuits = {
+  [Suites.Clubs]: '&#9827;',
+  [Suites.Diamonds]: '&#9830;',
+  [Suites.Hearts]: '&#9829;',
+  [Suites.Spades]: '&#9824;'
+}
+
 export default class Card extends Component {
   static propTypes = {
     value: PropTypes.oneOf(Object.values(Values)).isRequired,
@@ -24,15 +31,25 @@ export default class Card extends Component {
   }
 
   render() {
-    const { value, suit } = this.props
+    const { value, suit, onClick } = this.props
+    const isInteractive = Boolean(onClick)
 
     return (
       <div
-        className={`card card--suit-${suit.toLowerCase()}`}
+        className={`card card--suit-${suit.toLowerCase()} ${
+          isInteractive ? 'card--is-interactive' : ''
+        }`}
         style={{ transform: this.getTransform() }}
-        onClick={this.props.onClick}
+        onClick={onClick}
       >
-        {value} of {suit}
+        <div className="card__upper">
+          {value} of {suit}{' '}
+          <span dangerouslySetInnerHTML={{ __html: UnicodeSuits[suit] }} />
+        </div>
+        <div className="card__lower">
+          {value} of {suit}{' '}
+          <span dangerouslySetInnerHTML={{ __html: UnicodeSuits[suit] }} />
+        </div>
       </div>
     )
   }

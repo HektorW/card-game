@@ -18,18 +18,21 @@ module.exports = class MockPlayerSocket extends EventEmitter {
 
     log.debug('created', { id: this.id })
 
-    this.on(GameEvents.GameState, gamestate => {
-      this.gamestate = gamestate
+    this.on(GameEvents.GameState, gameState => {
+      this.gameState = gameState
 
-      if (gamestate.currentRound.nextPlayerId === this.id) {
-        this.makeAMove()
+      if (gameState.currentRound.nextPlayerId === this.id) {
+        setTimeout(() => this.makeAMove(gameState), 500)
       }
     })
   }
 
-  makeAMove() {
-    const cards = this.gamestate.players.me.cards
-    const cardToPlay = randomInArray(cards)
+  makeAMove(gameState) {
+    const roundsFirstMove = gameState.currentRound.moves[0]
+    const roundSuit = roundsFirstMove ? roundsFirstMove.suit : null
+    const cards = gameState.players.me.cards
+    const cardToPlay =
+      cards.find(card => card.suit === roundSuit) || randomInArray(cards)
 
     log.debug('making a move', {
       id: this.id,

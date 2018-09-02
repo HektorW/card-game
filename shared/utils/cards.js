@@ -11,3 +11,6 @@ module.exports.createDeckOfCards = () => {
   )
   return flattenArray(nestedDeckOfCards)
 }
+
+module.exports.cardNumberValue = card =>
+  card.value === Values.Ace ? 15 : Object.values(Values).indexOf(card.value) + 1

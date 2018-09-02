@@ -1,6 +1,9 @@
 const GameEvents = require('../../shared/constants/GameEvents')
 const { arrayOfLength } = require('../../shared/utils/array')
-const { createDeckOfCards } = require('../../shared/utils/cards')
+const {
+  createDeckOfCards,
+  cardNumberValue
+} = require('../../shared/utils/cards')
 const { randomIntInRange } = require('../../shared/utils/random')
 const PlayerModel = require('./PlayerModel')
 const { createGameId } = require('./game-id')
@@ -23,6 +26,7 @@ module.exports = class Game {
     )
     this.previousRounds = []
     this.currentRound = this.createRound(this.players[0].id)
+    this.winnerId = null
 
     this.assignStartCards()
     this.listenToPlayerEvents()
@@ -49,24 +53,6 @@ module.exports = class Game {
     this.players.forEach(player => {
       player.socket.on(GameEvents.Move, move => {
         this.handlePlayerMove(player, move)
-      })
-    })
-  }
-
-  sendGameStateToPlayers() {
-    this.players.forEach(player => {
-      const otherPlayers = this.players.filter(
-        otherPlayer => otherPlayer !== player
-      )
-
-      player.socket.emit(GameEvents.GameState, {
-        gameId: this.id,
-        previousRounds: this.previousRounds,
-        currentRound: this.currentRound,
-        players: {
-          others: otherPlayers.map(otherPlayer => otherPlayer.toPublicJSON()),
-          me: player.toPrivateJSON()
-        }
       })
     })
   }
@@ -111,7 +97,8 @@ module.exports = class Game {
     player.removeCard(move.card)
 
     if (currentRound.moves.length === 4) {
-      this.finishRound()
+      currentRound.nextPlayerId = null
+      setTimeout(() => this.finishRound(), 1000)
     } else {
       const nextPlayerIndex = (player.index + 1) % 4
       const nextPlayer = this.players[nextPlayerIndex]
@@ -137,7 +124,7 @@ module.exports = class Game {
       roundScore
     })
 
-    winningPlayer.score += roundScore
+    winningPlayer.points += roundScore
 
     const hasMoreCards = winningPlayer.cards.length > 0
     if (hasMoreCards) {
@@ -146,10 +133,21 @@ module.exports = class Game {
     } else {
       this.finishGame()
     }
+
+    this.sendGameStateToPlayers()
   }
 
   finishGame() {
-    this.log.debug('finishing game')
+    const winner = this.players.reduce(
+      (currentBestPlayer, player) =>
+        player.points > currentBestPlayer.points ? player : currentBestPlayer
+    )
+
+    this.winnerId = winner.id
+
+    this.log.debug('finished game', { winnerId: this.winnerId })
+
+    this.sendGameStateToPlayers()
   }
 
   getRoundWinnerId(round) {
@@ -159,12 +157,33 @@ module.exports = class Game {
     )
     const moveWithHighestValue = movesWithValidSuit.reduce(
       (currentHighestMove, move) =>
-        move.card.value > currentHighestMove.card.value
+        cardNumberValue(move.card) > cardNumberValue(currentHighestMove.card)
+          ? move
+          : currentHighestMove
     )
     return moveWithHighestValue.playerId
   }
 
   calculateRoundScore(round) {
     return 1
+  }
+
+  sendGameStateToPlayers() {
+    this.players.forEach(player => {
+      const otherPlayers = this.players.filter(
+        otherPlayer => otherPlayer !== player
+      )
+
+      player.socket.emit(GameEvents.GameState, {
+        gameId: this.id,
+        winnerId: this.winnerId,
+        previousRounds: this.previousRounds,
+        currentRound: this.currentRound,
+        players: {
+          others: otherPlayers.map(otherPlayer => otherPlayer.toPublicJSON()),
+          me: player.toPrivateJSON()
+        }
+      })
+    })
   }
 }
