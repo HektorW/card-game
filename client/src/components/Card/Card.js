@@ -12,7 +12,9 @@ export default class Card extends Component {
     scale: PropTypes.number,
     rotation: PropTypes.number,
     x: PropTypes.number,
-    y: PropTypes.number
+    y: PropTypes.number,
+
+    onClick: PropTypes.func
   }
 
   getTransform() {
@@ -25,7 +27,11 @@ export default class Card extends Component {
     const { value, suit } = this.props
 
     return (
-      <div className="card" style={{ transform: this.getTransform() }}>
+      <div
+        className={`card card--suit-${suit.toLowerCase()}`}
+        style={{ transform: this.getTransform() }}
+        onClick={this.props.onClick}
+      >
         {value} of {suit}
       </div>
     )

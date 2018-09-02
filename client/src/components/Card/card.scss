@@ -1,6 +1,17 @@
 .card {
   border: 1px solid #000;
   border-radius: 5px;
+  cursor: default;
   height: 325px;
   width: 200px;
+
+  &--suit-clubs,
+  &--suit-spades {
+    color: #000;
+  }
+
+  &--suit-diamonds,
+  &--suit-hearts {
+    color: #f00;
+  }
 }

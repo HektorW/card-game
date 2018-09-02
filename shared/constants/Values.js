@@ -1,5 +1,5 @@
-export default {
-  Ace: '1',
+module.exports = {
+  Ace: 'Ace',
   Two: '2',
   Three: '3',
   Four: '4',
@@ -9,7 +9,7 @@ export default {
   Eight: '8',
   Nine: '9',
   Ten: '10',
-  Jack: '11',
-  Queen: '12',
-  King: '13'
+  Jack: 'Jack',
+  Queen: 'Queen',
+  King: 'King'
 }

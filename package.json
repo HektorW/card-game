@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "node index.js",
-    "start:dev": "cross-env NODE_ENV=development nodemon --inspect=9002 index.js | bunyan -o short",
+    "start:dev": "cross-env NODE_ENV=development nodemon --inspect=9004 index.js | bunyan -o short",
     "build": "cd client/ && npm install && npm run build",
     "heroku-postbuild": "npm run build"
   },

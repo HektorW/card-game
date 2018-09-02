@@ -1,19 +1,11 @@
 import React from 'react'
-import Card from '../../components/Card/Card'
-import Values from 'shared/constants/Values'
-import Suites from 'shared/constants/Suites'
+import { Link } from 'react-router-dom'
 
 const Home = () => (
-  <div>
-    <Card
-      value={Values.Ace}
-      suit={Suites.Clubs}
-      scale={1}
-      rotation={10}
-      x={200}
-      y={100}
-    />
-  </div>
+  <main className="home">
+    <h1>Card game</h1>
+    <Link to="/game">Start game</Link>
+  </main>
 )
 
 export default Home

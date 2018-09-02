@@ -1,6 +1,6 @@
-export default {
-  Clubs: 'clubs',
-  Diamonds: 'diamonds',
-  Hearts: 'hearts',
-  Spades: 'spades'
+module.exports = {
+  Clubs: 'Clubs',
+  Diamonds: 'Diamonds',
+  Hearts: 'Hearts',
+  Spades: 'Spades'
 }
