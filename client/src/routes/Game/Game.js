@@ -6,14 +6,7 @@ import GameEvents from 'shared/constants/GameEvents'
 
 export default class Game extends Component {
   state = {
-    gameState: {
-      previousRounds: [],
-      currentRound: {},
-      players: {
-        others: [],
-        me: {}
-      }
-    }
+    gameState: null
   }
 
   componentDidMount() {
@@ -36,39 +29,35 @@ export default class Game extends Component {
 
   render() {
     const { gameState } = this.state
-    const {
-      currentRound,
-      players: { me, others }
-    } = gameState
+    if (!gameState) {
+      return null
+    }
 
+    const { teamA, teamB, currentSet, me } = gameState
     if (!me.id) {
       return <div>Game not loaded yet</div>
     }
 
-    if (gameState.winnerId) {
-      const winner =
-        gameState.winnerId === me.id
-          ? me
-          : others.find(other => other.id === gameState.winnerId)
-      return (
-        <div>
-          Winner is {winner === me ? 'you' : winner.id} with {winner.points}{' '}
-          points
-        </div>
-      )
+    if (!currentSet) {
+      return <div>No set</div>
+    }
+
+    const { currentRound } = currentSet
+    if (!currentRound) {
+      return <div>No round</div>
     }
 
     const isMyTurn = currentRound.nextPlayerId === me.id
-    const allPlayers = [me, ...others]
-
+    const allPlayers = [...teamA.players, ...teamB.players]
     return (
       <main className="game">
         <div>
           Me: {me.id}, Points: {me.points}
         </div>
-        {isMyTurn && <div>It's my turn</div>}
 
-        <RoundStats round={currentRound} me={me} others={others} />
+        {isMyTurn && <h1>It's my turn</h1>}
+
+        <RoundStats round={currentRound} me={me} allPlayers={allPlayers} />
 
         <MyHandCards
           cards={me.cards}

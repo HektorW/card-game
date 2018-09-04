@@ -1,13 +1,12 @@
 const GameSet = require('./GameSet')
 const GameEvents = require('../../shared/constants/GameEvents')
 const Suites = require('../../shared/constants/Suites')
-const { arrayOfLength } = require('../../shared/utils/array')
 const {
   createDeckOfCards,
   shuffleDeckOfCards,
   dealCards
 } = require('../../shared/utils/cards')
-const { randomIntInRange, randomInArray } = require('../../shared/utils/random')
+const { randomInArray } = require('../../shared/utils/random')
 const { createGameId } = require('./game-id')
 const createLog = require('../../log')
 
@@ -164,10 +163,10 @@ module.exports = class Game {
       player.socket.emit(GameEvents.GameState, {
         gameId: this.id,
         winnerId: this.winnerId,
-        previousSets: this.previousSets,
-        currentSet: this.currentSet,
-        teamA: this.teamA,
-        teamB: this.teamB,
+        previousSets: this.previousSets.map(set => set.toJSON()),
+        currentSet: this.currentSet.toJSON(),
+        teamA: this.teamA.toJSON(),
+        teamB: this.teamB.toJSON(),
         me: player.toPrivateJSON()
         // players: {
         //   others: otherPlayers.map(otherPlayer => otherPlayer.toPublicJSON()),

@@ -1,7 +1,8 @@
 module.exports = class Team {
   constructor(id, players) {
     this.id = id
-    this.players = 0
+    this.players = players
+
     this.points = 0
 
     players[0].teamId = id
@@ -11,7 +12,7 @@ module.exports = class Team {
   toJSON() {
     return {
       id: this.id,
-      players: this.players,
+      players: this.players.map(player => player.toPrivateJSON()),
       points: this.points
     }
   }

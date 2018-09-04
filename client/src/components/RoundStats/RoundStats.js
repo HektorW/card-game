@@ -2,13 +2,10 @@ import React from 'react'
 import Card from '../Card'
 import './round-stats.scss'
 
-const RoundStats = ({ round, me, others }) => (
+const RoundStats = ({ round, me, allPlayers }) => (
   <div className="round-stats">
     {round.moves.map(move => {
-      const movePlayer =
-        move.playerId === me.id
-          ? me
-          : others.find(player => move.playerId === player.id)
+      const movePlayer = allPlayers.find(player => move.playerId === player.id)
 
       return (
         <div

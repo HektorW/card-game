@@ -76,8 +76,8 @@ module.exports = class GameSet {
       teamBPredictionPoints: this.teamBPredictionPoints,
       teamAPoints: this.teamAPoints,
       teamBPoints: this.teamBPoints,
-      previousRounds: this.previousRounds,
-      currentRound: this.currentRound,
+      previousRounds: this.previousRounds.map(round => round.toJSON()),
+      currentRound: this.currentRound.toJSON(),
       winningTeamId: this.winningTeamId
     }
   }

@@ -68,7 +68,7 @@ module.exports.isValidMove = (assetSuit, roundCards, playerCards, moveCard) => {
     }
 
     const firstCardSuitInRound = roundCards[0].suit
-    const playerCardsWithSuit = playerCards.some(
+    const playerCardsWithSuit = playerCards.filter(
       card => card.suit === firstCardSuitInRound
     )
     if (

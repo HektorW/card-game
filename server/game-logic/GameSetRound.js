@@ -3,6 +3,7 @@ const GameSetRoundMove = require('./GameSetRoundMove')
 
 module.exports = class GameSetRound {
   constructor(assetSuit, startingPlayerId) {
+    this.assetSuit = assetSuit
     this.nextPlayerId = startingPlayerId
     this.moves = []
   }
@@ -29,7 +30,7 @@ module.exports = class GameSetRound {
   toJSON() {
     return {
       nextPlayerId: this.nextPlayerId,
-      moves: this.moves
+      moves: this.moves.map(move => move.toJSON())
     }
   }
 }
