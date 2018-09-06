@@ -19,7 +19,9 @@ module.exports = class Game {
 
     this.teamA = teamA
     this.teamB = teamB
+
     this.allPlayers = [...teamA.players, ...teamB.players]
+    this.bothTeams = [teamA, teamB]
 
     this.previousSets = []
     this.currentSet = null

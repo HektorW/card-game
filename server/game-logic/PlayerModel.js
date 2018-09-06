@@ -7,7 +7,6 @@ module.exports = class PlayerModel {
 
     this.id = this.socket.id
 
-    this.teamId = null
     this.cards = []
   }
 

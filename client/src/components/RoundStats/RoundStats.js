@@ -1,5 +1,6 @@
 import React from 'react'
 import Card from '../Card'
+import classNames from '../../utils/classNames'
 import './round-stats.scss'
 
 const RoundStats = ({ round, me, allPlayers }) => (
@@ -10,10 +11,10 @@ const RoundStats = ({ round, me, allPlayers }) => (
       return (
         <div
           key={movePlayer.id}
-          className={`round-stats__move round-stats__move--index-${(4 +
-            movePlayer.index -
-            me.index) %
-            4}`}
+          className={classNames(
+            'round-stats__move',
+            `round-stats__move--index-${(4 + movePlayer.index - me.index) % 4}`
+          )}
         >
           <Card {...move.card} scale={0.8} />
         </div>

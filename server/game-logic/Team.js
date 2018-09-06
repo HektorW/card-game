@@ -4,9 +4,6 @@ module.exports = class Team {
     this.players = players
 
     this.points = 0
-
-    players[0].teamId = id
-    players[1].teamId = id
   }
 
   toJSON() {
