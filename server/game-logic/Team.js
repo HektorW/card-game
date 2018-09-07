@@ -9,7 +9,7 @@ module.exports = class Team {
   toJSON() {
     return {
       id: this.id,
-      players: this.players.map(player => player.toPrivateJSON()),
+      players: this.players.map(player => player.toPublicJSON()),
       points: this.points
     }
   }
