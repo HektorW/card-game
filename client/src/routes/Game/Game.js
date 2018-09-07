@@ -17,13 +17,13 @@ export default class Game extends Component {
       console.log('connected')
     })
 
-    this.socket.on(GameEvents.GameState, gameState =>
+    this.socket.on(GameEvents.Server.GameState, gameState =>
       this.setState(() => ({ gameState }))
     )
   }
 
   onCardClick(card) {
-    this.socket.emit(GameEvents.Move, {
+    this.socket.emit(GameEvents.Client.RoundMove, {
       card
     })
   }

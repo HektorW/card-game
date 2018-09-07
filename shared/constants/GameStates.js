@@ -1,4 +1,6 @@
 module.exports = {
-  PrepareSet: 'prepare-set',
-  PlaySet: 'play-set'
+  Set: {
+    Predictions: 'set-predictions',
+    Playing: 'set-playing'
+  }
 }

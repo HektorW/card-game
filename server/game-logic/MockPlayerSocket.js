@@ -19,7 +19,7 @@ module.exports = class MockPlayerSocket extends EventEmitter {
 
     log.debug('created', { id: this.id })
 
-    this.on(GameEvents.GameState, gameState => {
+    this.on(GameEvents.Server.GameState, gameState => {
       const { currentSet } = gameState
       if (!currentSet) {
         return
@@ -48,7 +48,6 @@ module.exports = class MockPlayerSocket extends EventEmitter {
     )
 
     if (!cardToPlay) {
-      debugger
       log.error('failed to find a valid move', {
         id: this.id,
         myCards,
@@ -63,7 +62,7 @@ module.exports = class MockPlayerSocket extends EventEmitter {
       cardToPlay
     })
 
-    this.emit(GameEvents.Move, {
+    this.emit(GameEvents.Client.RoundMove, {
       card: cardToPlay
     })
   }

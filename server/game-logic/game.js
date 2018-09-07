@@ -1,12 +1,9 @@
 const GameSet = require('./GameSet')
 const GameEvents = require('../../shared/constants/GameEvents')
-const Suites = require('../../shared/constants/Suites')
 const {
   createDeckOfCards,
-  shuffleDeckOfCards,
-  dealCards
+  shuffleDeckOfCards
 } = require('../../shared/utils/cards')
-const { randomInArray } = require('../../shared/utils/random')
 const { createGameId } = require('./game-id')
 const createLog = require('../../log')
 
@@ -34,19 +31,12 @@ module.exports = class Game {
 
   setupFirstSet() {
     const deckOfCards = shuffleDeckOfCards(createDeckOfCards())
-    const dealtCardArrays = dealCards(deckOfCards)
-
-    dealtCardArrays.forEach(
-      (cards, index) => (this.allPlayers[index].cards = cards)
-    )
 
     this.currentSet = new GameSet(
       this.bothTeams,
       this.allPlayers,
-      randomInArray(Object.values(Suites)),
-      80,
-      90,
-      this.allPlayers[0].id
+      this.allPlayers[0].id,
+      deckOfCards
     )
 
     this.currentSet.on(GameSet.Events.StateUpdated, () =>
@@ -55,34 +45,12 @@ module.exports = class Game {
   }
 
   listenToPlayerEvents() {
-    this.allPlayers.forEach(player => {
-      player.socket.on(GameEvents.Move, move => {
-        this.handlePlayerMove(player, move)
-      })
-    })
-  }
-
-  handlePlayerMove(player, move) {
-    this.log.debug('handling move request', {
-      playerId: player.id,
-      move
-    })
-
-    const validMove = this.currentSet.makeRoundMove(player, move)
-    if (!validMove) {
-      this.log.debug('move was denied for set', {
-        playerId: player.id,
-        move
-      })
-      return
-    }
-
-    this.sendGameStateToPlayers()
+    this.allPlayers.forEach(player => {})
   }
 
   sendGameStateToPlayers() {
     this.allPlayers.forEach(player => {
-      player.socket.emit(GameEvents.GameState, {
+      player.socket.emit(GameEvents.Server.GameState, {
         gameId: this.id,
         winnerId: this.winnerId,
         previousSets: this.previousSets.map(set => set.toJSON()),

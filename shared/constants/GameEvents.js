@@ -1,4 +1,14 @@
 module.exports = {
-  GameState: 'gamestate',
-  Move: 'move'
+  Client: {
+    SetPrediction: 'set-prediction',
+    SetPredictionCounter: 'set-prediction-counter',
+
+    RoundMove: 'round-move'
+  },
+
+  Server: {
+    GameState: 'gamestate',
+
+    SetStart: 'set-start'
+  }
 }

@@ -1,27 +1,24 @@
 const { EventEmitter } = require('events')
 const GameSetRound = require('./GameSetRound')
 const { flattenArray } = require('../../shared/utils/array')
-const { getPlayerTeam } = require('../../shared/utils/player')
+const { dealCards } = require('../../shared/utils/cards')
+const { getPlayerTeam, getNextPlayer } = require('../../shared/utils/player')
 const { getWinningMove, getRoundPoints } = require('../../shared/utils/round')
+const GameEvents = require('../../shared/constants/GameEvents')
+const GameStates = require('../../shared/constants/GameStates')
 
 class GameSet extends EventEmitter {
-  constructor(
-    teams,
-    allPlayers,
-    assetSuit,
-    teamAPredictionPoints,
-    teamBPredictionPoints,
-    startingPlayerId
-  ) {
+  constructor(teams, allPlayers, startingPlayerId, deckOfCards) {
     super()
 
     this.teams = teams
     this.allPlayers = allPlayers
+    this.startingPlayerId = startingPlayerId
 
-    this.assetSuit = assetSuit
+    this.assetSuit = null
 
-    this.teamAPredictionPoints = teamAPredictionPoints
-    this.teamBPredictionPoints = teamBPredictionPoints
+    this.teamAPredictionPoints = null
+    this.teamBPredictionPoints = null
 
     this.teamAPoints = 0
     this.teamBPoints = 0
@@ -29,7 +26,52 @@ class GameSet extends EventEmitter {
     this.previousRounds = []
     this.currentRound = null
 
-    this.nextRound(startingPlayerId)
+    this.nextPredictionPlayerId = this.startingPlayerId
+    this.currentState = GameStates.Set.Predicitions
+
+    this.bindPlayerEvents()
+
+    this.resetPlayerSetPredicitions()
+    this.dealCards(deckOfCards)
+  }
+
+  destroy() {
+    this.allPlayers.forEach(player => {
+      player.socket.off(GameEvents.Client.SetPrediction)
+      player.socket.off(GameEvents.Client.SetPredictionCounter)
+      player.socket.off(GameEvents.Client.RoundMove)
+    })
+  }
+
+  bindPlayerEvents() {
+    this.allPlayers.forEach(player => {
+      player.socket.on(
+        GameEvents.Client.SetPrediction,
+        this.onPlayerSetPrediction.bind(this, player)
+      )
+      player.socket.on(
+        GameEvents.Client.SetPredictionCounter,
+        this.onPlayerSetPredictionCounter.bind(this, player)
+      )
+      player.socket.on(
+        GameEvents.Client.RoundMove,
+        this.onPlayerRoundMove.bind(this, player)
+      )
+    })
+  }
+
+  resetPlayerSetPredicitions() {
+    this.allPlayers.forEach(player => {
+      player.resetSetPredictions()
+    })
+  }
+
+  dealCards(deckOfCards) {
+    const dealtCardArrays = dealCards(deckOfCards)
+
+    dealtCardArrays.forEach(
+      (cards, index) => (this.allPlayers[index].cards = cards)
+    )
   }
 
   nextRound(startingPlayerId) {
@@ -40,6 +82,31 @@ class GameSet extends EventEmitter {
     this.currentRound = new GameSetRound(this.assetSuit, startingPlayerId)
 
     this.emit(GameSet.Events.StateUpdated)
+  }
+
+  onPlayerSetPrediction(player, prediction) {
+    if (this.currentState !== GameStates.Set.Predicitions) {
+      return
+    }
+
+    if (player.id !== this.nextPredictionPlayerId) {
+      return
+    }
+
+    player.setPredictionPoints = prediction.points
+    player.setPredictionAssetSuit = prediction.assetSuit
+
+    this.nextPredictionPlayerId = getNextPlayer(this.allPlayers, player.id)
+
+    this.emit(GameSet.Events.StateUpdated)
+  }
+
+  onPlayerSetPredictionCounter(player, predictionToCounter) {}
+
+  onPlayerRoundMove(player, move) {
+    if (this.makeRoundMove(player, move)) {
+      this.emit(GameSet.Events.StateUpdated)
+    }
   }
 
   makeRoundMove(player, move) {
@@ -71,10 +138,7 @@ class GameSet extends EventEmitter {
         setTimeout(() => this.nextRound(winningMove.playerId), 1000)
       }
     } else {
-      const nextPlayerIndex = (player.index + 1) % 4
-      const nextPlayer = this.allPlayers.find(
-        player => player.index === nextPlayerIndex
-      )
+      const nextPlayer = getNextPlayer(this.allPlayers, player.id)
       currentRound.nextPlayerId = nextPlayer.id
     }
 
@@ -90,6 +154,7 @@ class GameSet extends EventEmitter {
 
   toJSON() {
     return {
+      currentState: this.currentState,
       assetSuit: this.assetSuit,
       teamAPredictionPoints: this.teamAPredictionPoints,
       teamBPredictionPoints: this.teamBPredictionPoints,

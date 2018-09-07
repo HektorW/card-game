@@ -7,7 +7,15 @@ module.exports = class PlayerModel {
 
     this.id = this.socket.id
 
+    this.setPredictionPoints = null
+    this.setPredictionAssetSuit = null
+
     this.cards = []
+  }
+
+  resetSetPredictions() {
+    this.setPredictionPoints = null
+    this.setPredictionAssetSuit = null
   }
 
   hasCard(card) {
@@ -21,7 +29,9 @@ module.exports = class PlayerModel {
   toPublicJSON() {
     return {
       index: this.index,
-      id: this.socket.id
+      id: this.socket.id,
+      setPredictionPoints: this.setPredictionPoints,
+      setPredictionAssetSuit: this.setPredictionAssetSuit
     }
   }
 
