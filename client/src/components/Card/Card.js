@@ -1,20 +1,18 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
+import SuitSign from '../SuitSign'
 import Suites from 'shared/constants/Suites'
 import Values from 'shared/constants/Values'
 import './card.scss'
-
-const UnicodeSuits = {
-  [Suites.Clubs]: '&#9827;',
-  [Suites.Diamonds]: '&#9830;',
-  [Suites.Hearts]: '&#9829;',
-  [Suites.Spades]: '&#9824;'
-}
+import classNames from '../../utils/classNames'
 
 export default class Card extends Component {
   static propTypes = {
+    className: PropTypes.string,
+
     value: PropTypes.oneOf(Object.values(Values)).isRequired,
     suit: PropTypes.oneOf(Object.values(Suites)).isRequired,
+    isAssetSuit: PropTypes.bool,
 
     scale: PropTypes.number,
     rotation: PropTypes.number,
@@ -31,24 +29,26 @@ export default class Card extends Component {
   }
 
   render() {
-    const { value, suit, onClick } = this.props
+    const { className, value, suit, isAssetSuit, onClick } = this.props
     const isInteractive = Boolean(onClick)
 
     return (
       <div
-        className={`card card--suit-${suit.toLowerCase()} ${
-          isInteractive ? 'card--is-interactive' : ''
-        }`}
+        className={classNames(
+          'card',
+          `card--suit-${suit.toLowerCase()}`,
+          isAssetSuit && 'card--is-asset-suit',
+          isInteractive && 'card--is-interactive',
+          className
+        )}
         style={{ transform: this.getTransform() }}
         onClick={onClick}
       >
         <div className="card__upper">
-          {value} of {suit}{' '}
-          <span dangerouslySetInnerHTML={{ __html: UnicodeSuits[suit] }} />
+          {value} of {suit} <SuitSign suit={suit} />
         </div>
         <div className="card__lower">
-          {value} of {suit}{' '}
-          <span dangerouslySetInnerHTML={{ __html: UnicodeSuits[suit] }} />
+          {value} of {suit} <SuitSign suit={suit} />
         </div>
       </div>
     )

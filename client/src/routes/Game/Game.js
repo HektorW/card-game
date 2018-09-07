@@ -3,17 +3,11 @@ import socketIO from 'socket.io-client'
 import MyHandCards from '../../components/MyHandCards'
 import RoundStats from '../../components/RoundStats'
 import GameEvents from 'shared/constants/GameEvents'
+import { getPlayerTeam } from 'shared/utils/player'
 
 export default class Game extends Component {
   state = {
-    gameState: {
-      previousRounds: [],
-      currentRound: {},
-      players: {
-        others: [],
-        me: {}
-      }
-    }
+    gameState: null
   }
 
   componentDidMount() {
@@ -36,41 +30,47 @@ export default class Game extends Component {
 
   render() {
     const { gameState } = this.state
-    const {
-      currentRound,
-      players: { me, others }
-    } = gameState
+    if (!gameState) {
+      return null
+    }
 
+    const { teamA, teamB, currentSet, me } = gameState
     if (!me.id) {
       return <div>Game not loaded yet</div>
     }
 
-    if (gameState.winnerId) {
-      const winner =
-        gameState.winnerId === me.id
-          ? me
-          : others.find(other => other.id === gameState.winnerId)
-      return (
-        <div>
-          Winner is {winner === me ? 'you' : winner.id} with {winner.points}{' '}
-          points
-        </div>
-      )
+    if (!currentSet) {
+      return <div>No set</div>
+    }
+
+    const { assetSuit, currentRound } = currentSet
+    if (!currentRound) {
+      return <div>No round</div>
     }
 
     const isMyTurn = currentRound.nextPlayerId === me.id
-    const allPlayers = [me, ...others]
+    const allPlayers = [...teamA.players, ...teamB.players]
+    const team = getPlayerTeam([teamA, teamB], me.id)
 
     return (
       <main className="game">
         <div>
-          Me: {me.id}, Points: {me.points}
+          Me: {me.id}, Points: {currentSet.teamAPoints}
         </div>
-        {isMyTurn && <div>It's my turn</div>}
 
-        <RoundStats round={currentRound} me={me} others={others} />
+        {isMyTurn && <h1>It's my turn</h1>}
+
+        <RoundStats
+          assetSuit={assetSuit}
+          round={currentRound}
+          me={me}
+          allPlayers={allPlayers}
+        />
 
         <MyHandCards
+          assetSuit={assetSuit}
+          currentRound={currentRound}
+          teamId={team.id}
           cards={me.cards}
           onCardClick={isMyTurn ? this.onCardClick.bind(this) : null}
         />

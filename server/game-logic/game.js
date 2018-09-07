@@ -1,189 +1,198 @@
+const GameSet = require('./GameSet')
 const GameEvents = require('../../shared/constants/GameEvents')
-const { arrayOfLength } = require('../../shared/utils/array')
+const Suites = require('../../shared/constants/Suites')
 const {
   createDeckOfCards,
-  cardNumberValue
+  shuffleDeckOfCards,
+  dealCards
 } = require('../../shared/utils/cards')
-const { randomIntInRange } = require('../../shared/utils/random')
-const PlayerModel = require('./PlayerModel')
+const { randomInArray } = require('../../shared/utils/random')
 const { createGameId } = require('./game-id')
 const createLog = require('../../log')
 
 module.exports = class Game {
-  constructor(sockets) {
+  constructor(teamA, teamB) {
     this.id = createGameId()
     this.log = createLog(`game-${this.id}`)
 
-    if (!sockets.length === 4) {
-      this.log.error('Could not start game because wrong number of sockets', {
-        sockets
-      })
-      throw new Error('Game neeed 4 sockets to start')
-    }
+    this.log.debug('starting new game')
 
-    this.players = sockets.map(
-      (socket, index) => new PlayerModel(socket, index)
-    )
-    this.previousRounds = []
-    this.currentRound = this.createRound(this.players[0].id)
-    this.winnerId = null
+    this.teamA = teamA
+    this.teamB = teamB
 
-    this.assignStartCards()
+    this.allPlayers = [...teamA.players, ...teamB.players]
+    this.bothTeams = [teamA, teamB]
+
+    this.previousSets = []
+    this.currentSet = null
+
+    this.setupFirstSet()
+
     this.listenToPlayerEvents()
     this.sendGameStateToPlayers()
   }
 
-  assignStartCards() {
-    const deckOfCards = createDeckOfCards()
-    const numberOfCardsEach = 8
+  setupFirstSet() {
+    const deckOfCards = shuffleDeckOfCards(createDeckOfCards())
+    const dealtCardArrays = dealCards(deckOfCards)
 
-    this.players.forEach(player => {
-      player.cards = arrayOfLength(numberOfCardsEach).map(() => {
-        const randomCardIndex = randomIntInRange(0, deckOfCards.length)
-        const randomCard = deckOfCards[randomCardIndex]
+    dealtCardArrays.forEach(
+      (cards, index) => (this.allPlayers[index].cards = cards)
+    )
 
-        deckOfCards.splice(randomCardIndex, 1)
+    this.currentSet = new GameSet(
+      this.bothTeams,
+      this.allPlayers,
+      randomInArray(Object.values(Suites)),
+      80,
+      90,
+      this.allPlayers[0].id
+    )
 
-        return randomCard
-      })
-    })
+    this.currentSet.on(GameSet.Events.StateUpdated, () =>
+      this.sendGameStateToPlayers()
+    )
   }
 
   listenToPlayerEvents() {
-    this.players.forEach(player => {
+    this.allPlayers.forEach(player => {
       player.socket.on(GameEvents.Move, move => {
         this.handlePlayerMove(player, move)
       })
     })
   }
 
-  createRound(startingPlayerId) {
-    return {
-      nextPlayerId: startingPlayerId,
-      moves: []
-    }
-  }
-
   handlePlayerMove(player, move) {
-    const { currentRound } = this
-
     this.log.debug('handling move request', {
       playerId: player.id,
       move
     })
 
-    if (currentRound.nextPlayerId !== player.id) {
-      this.log.debug('wrong player tried to make a move', {
-        nextPlayerId: this.nextPlayer.id,
-        playerId: player.id
-      })
-      return
-    }
-
-    if (!player.hasCard(move.card)) {
-      this.log.debug('player tried to play invalid card', {
+    const validMove = this.currentSet.makeRoundMove(player, move)
+    if (!validMove) {
+      this.log.debug('move was denied for set', {
         playerId: player.id,
-        playerCards: player.cards,
         move
       })
       return
     }
 
-    currentRound.moves.push({
-      playerId: player.id,
-      card: move.card
-    })
-
-    player.removeCard(move.card)
-
-    if (currentRound.moves.length === 4) {
-      currentRound.nextPlayerId = null
-      setTimeout(() => this.finishRound(), 1000)
-    } else {
-      const nextPlayerIndex = (player.index + 1) % 4
-      const nextPlayer = this.players[nextPlayerIndex]
-      currentRound.nextPlayerId = nextPlayer.id
-    }
-
     this.sendGameStateToPlayers()
+
+    // const { currentRound } = this
+    // this.log.debug('handling move request', {
+    //   playerId: player.id,
+    //   move
+    // })
+    // if (currentRound.nextPlayerId !== player.id) {
+    //   this.log.debug('wrong player tried to make a move', {
+    //     nextPlayerId: this.nextPlayer.id,
+    //     playerId: player.id
+    //   })
+    //   return
+    // }
+    // if (!isValidMove())) {
+    //   this.log.debug('player tried to play invalid card', {
+    //     playerId: player.id,
+    //     playerCards: player.cards,
+    //     move
+    //   })
+    //   return
+    // }
+    // currentRound.moves.push({
+    //   playerId: player.id,
+    //   card: move.card
+    // })
+    // player.removeCard(move.card)
+    // if (currentRound.moves.length === 4) {
+    //   currentRound.nextPlayerId = null
+    //   setTimeout(() => this.finishRound(), 1000)
+    // } else {
+    //   const nextPlayerIndex = (player.index + 1) % 4
+    //   const nextPlayer = this.allPlayers[nextPlayerIndex]
+    //   currentRound.nextPlayerId = nextPlayer.id
+    // }
+    // this.sendGameStateToPlayers()
   }
 
   finishRound() {
-    const { currentRound } = this
-    this.log.debug('finishing round', { round: currentRound })
-
-    const roundWinnerId = this.getRoundWinnerId(currentRound)
-    const winningPlayer = this.players.find(
-      player => player.id === roundWinnerId
-    )
-
-    const roundScore = this.calculateRoundScore(currentRound)
-
-    this.log.debug('winner of round', {
-      roundWinnerId,
-      roundScore
-    })
-
-    winningPlayer.points += roundScore
-
-    const hasMoreCards = winningPlayer.cards.length > 0
-    if (hasMoreCards) {
-      this.previousRounds.push(currentRound)
-      this.currentRound = this.createRound(winningPlayer.id)
-    } else {
-      this.finishGame()
-    }
-
-    this.sendGameStateToPlayers()
+    // const { currentRound } = this
+    // this.log.debug('finishing round', { round: currentRound })
+    // const roundWinnerId = this.getRoundWinnerId(currentRound)
+    // const winningPlayer = this.allPlayers.find(
+    //   player => player.id === roundWinnerId
+    // )
+    // const roundScore = this.calculateRoundScore(currentRound)
+    // this.log.debug('winner of round', {
+    //   roundWinnerId,
+    //   roundScore
+    // })
+    // winningPlayer.points += roundScore
+    // const hasMoreCards = winningPlayer.cards.length > 0
+    // if (hasMoreCards) {
+    //   this.previousRounds.push(currentRound)
+    //   this.currentRound = this.createRound(winningPlayer.id)
+    // } else {
+    //   this.finishGame()
+    // }
+    // this.sendGameStateToPlayers()
   }
 
   finishGame() {
-    const winner = this.players.reduce(
-      (currentBestPlayer, player) =>
-        player.points > currentBestPlayer.points ? player : currentBestPlayer
-    )
-
-    this.winnerId = winner.id
-
-    this.log.debug('finished game', { winnerId: this.winnerId })
-
-    this.sendGameStateToPlayers()
+    // const winner = this.allPlayers.reduce(
+    //   (currentBestPlayer, player) =>
+    //     player.points > currentBestPlayer.points ? player : currentBestPlayer
+    // )
+    // this.winnerId = winner.id
+    // this.log.debug('finished game', { winnerId: this.winnerId })
+    // this.sendGameStateToPlayers()
   }
 
   getRoundWinnerId(round) {
-    const validSuit = round.moves[0].card.suit
-    const movesWithValidSuit = round.moves.filter(
-      move => move.card.suit === validSuit
-    )
-    const moveWithHighestValue = movesWithValidSuit.reduce(
-      (currentHighestMove, move) =>
-        cardNumberValue(move.card) > cardNumberValue(currentHighestMove.card)
-          ? move
-          : currentHighestMove
-    )
-    return moveWithHighestValue.playerId
+    // const validSuit = round.moves[0].card.suit
+    // const movesWithValidSuit = round.moves.filter(
+    //   move => move.card.suit === validSuit
+    // )
+    // const moveWithHighestValue = movesWithValidSuit.reduce(
+    //   (currentHighestMove, move) =>
+    //     cardNumberValue(move.card) > cardNumberValue(currentHighestMove.card)
+    //       ? move
+    //       : currentHighestMove
+    // )
+    // return moveWithHighestValue.playerId
   }
 
   calculateRoundScore(round) {
-    return 1
+    // return 1
   }
 
   sendGameStateToPlayers() {
-    this.players.forEach(player => {
-      const otherPlayers = this.players.filter(
-        otherPlayer => otherPlayer !== player
-      )
-
+    this.allPlayers.forEach(player => {
       player.socket.emit(GameEvents.GameState, {
         gameId: this.id,
         winnerId: this.winnerId,
-        previousRounds: this.previousRounds,
-        currentRound: this.currentRound,
-        players: {
-          others: otherPlayers.map(otherPlayer => otherPlayer.toPublicJSON()),
-          me: player.toPrivateJSON()
-        }
+        previousSets: this.previousSets.map(set => set.toJSON()),
+        currentSet: this.currentSet.toJSON(),
+        teamA: this.teamA.toJSON(),
+        teamB: this.teamB.toJSON(),
+        me: player.toPrivateJSON()
+        // players: {
+        //   others: otherPlayers.map(otherPlayer => otherPlayer.toPublicJSON()),
+        //   me: player.toPrivateJSON()
+        // }
       })
     })
+  }
+
+  getDebugGameState() {
+    return {
+      gameId: this.id,
+      winnerId: this.winnerId,
+      previousSets: this.previousSets.map(set => set.toJSON()),
+      currentSet: this.currentSet.toJSON(),
+      teamA: this.teamA.toJSON(),
+      teamB: this.teamB.toJSON(),
+      players: this.allPlayers.map(player => player.toPrivateJSON())
+    }
   }
 }
