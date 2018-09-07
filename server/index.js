@@ -16,8 +16,12 @@ app.use(async (ctx, next) => {
 })
 
 app.use(ctx => {
-  if (ctx.path === '/') {
-    ctx.body = 'Hello world'
+  if (ctx.path === '/gamestate') {
+    const { gameId } = ctx.query
+    const game = websocketServer.games[gameId]
+    ctx.body = game
+      ? websocketServer.games[gameId].getDebugGameState()
+      : `Cant find game "${gameId}"`
   }
 })
 

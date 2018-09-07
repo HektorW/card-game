@@ -1,7 +1,6 @@
 const Suites = require('../constants/Suites')
 const Values = require('../constants/Values')
 const { flattenArray } = require('./array')
-const { getPlayerTeam, getPlayerById } = require('./player')
 
 module.exports.createDeckOfCards = () => {
   const suiteValues = Object.values(Suites)
@@ -41,54 +40,6 @@ module.exports.dealCards = deckOfCards => {
 
 module.exports.isSameCard = (cardA, cardB) =>
   cardA.suit === cardB.suit && cardA.value === cardB.value
-
-module.exports.isValidMove = (
-  assetSuit,
-  roundMoves,
-  movePlayerId,
-  playerTeamId,
-  playerCards,
-  moveCard
-) => {
-  const cardIsInPlayerCards = playerCards.some(card =>
-    module.exports.isSameCard(card, moveCard)
-  )
-  if (!cardIsInPlayerCards) {
-    return false
-  }
-
-  if (roundMoves.length > 0) {
-    const firstCardSuitInRound = roundMoves[0].card.suit
-    const playerCardsWithSuit = playerCards.filter(
-      card => card.suit === firstCardSuitInRound
-    )
-    if (
-      playerCardsWithSuit.length > 0 &&
-      moveCard.suit !== firstCardSuitInRound
-    ) {
-      return false
-    }
-
-    const isAssetCardInRound = roundCards.some(card => card.suit === assetSuit)
-    const playerAssetCards = playerCards.filter(card => card.suit === assetSuit)
-
-    if (isAssetCardInRound && playerAssetCards.length > 0) {
-      const highestPlayerAssetCard = playerAssetCards.reduce(
-        (currentHighestCard, card) =>
-          module.exports.cardNumberValue(card, true) >
-          module.exports.cardNumberValue(currentHighestCard)
-            ? card
-            : currentHighestCard
-      )
-
-      if (!module.exports.isSameCard(highestPlayerAssetCard, moveCard)) {
-        return false
-      }
-    }
-  }
-
-  return true
-}
 
 module.exports.cardNumberValue = (card, isAssetSuit) => {
   if (isAssetSuit) {

@@ -1,5 +1,6 @@
-const { isValidMove } = require('../../shared/utils/cards')
+const { isValidMove } = require('../../shared/utils/round')
 const GameSetRoundMove = require('./GameSetRoundMove')
+const log = require('../../log')(__filename)
 
 module.exports = class GameSetRound {
   constructor(assetSuit, startingPlayerId) {
@@ -8,21 +9,34 @@ module.exports = class GameSetRound {
     this.moves = []
   }
 
-  makeMove(player, move) {
+  makeMove(player, playerTeamId, move) {
     if (this.moves.length === 4) {
-      throw new Error('Round already has 4 moves')
+      log.debug('tried to make a move when there already is 4', {
+        player,
+        playerTeamId,
+        move,
+        moves: this.moves
+      })
+      return false
     }
 
     if (player.id !== this.nextPlayerId) {
       return false
     }
 
-    const roundCards = this.moves.map(move => move.card)
-    if (!isValidMove(this.assetSuit, roundCards, player.cards, move.card)) {
+    if (
+      !isValidMove(
+        this.assetSuit,
+        this.moves,
+        playerTeamId,
+        player.cards,
+        move.card
+      )
+    ) {
       return false
     }
 
-    this.moves.push(new GameSetRoundMove(player.id, move.card))
+    this.moves.push(new GameSetRoundMove(player.id, playerTeamId, move.card))
 
     return true
   }

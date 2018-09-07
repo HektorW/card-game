@@ -41,11 +41,16 @@ module.exports = class Game {
     )
 
     this.currentSet = new GameSet(
+      this.bothTeams,
       this.allPlayers,
       randomInArray(Object.values(Suites)),
       80,
       90,
       this.allPlayers[0].id
+    )
+
+    this.currentSet.on(GameSet.Events.StateUpdated, () =>
+      this.sendGameStateToPlayers()
     )
   }
 
@@ -63,7 +68,8 @@ module.exports = class Game {
       move
     })
 
-    if (!this.currentSet.makeRoundMove(player, move)) {
+    const validMove = this.currentSet.makeRoundMove(player, move)
+    if (!validMove) {
       this.log.debug('move was denied for set', {
         playerId: player.id,
         move
@@ -176,5 +182,17 @@ module.exports = class Game {
         // }
       })
     })
+  }
+
+  getDebugGameState() {
+    return {
+      gameId: this.id,
+      winnerId: this.winnerId,
+      previousSets: this.previousSets.map(set => set.toJSON()),
+      currentSet: this.currentSet.toJSON(),
+      teamA: this.teamA.toJSON(),
+      teamB: this.teamB.toJSON(),
+      players: this.allPlayers.map(player => player.toPrivateJSON())
+    }
   }
 }

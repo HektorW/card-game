@@ -1,14 +1,14 @@
 module.exports = class GameSetRoundMove {
-  constructor(playerId, playerTeamId, card) {
+  constructor(playerId, teamId, card) {
     this.playerId = playerId
-    this.playerTeamId = playerTeamId
+    this.teamId = teamId
     this.card = card
   }
 
   toJSON() {
     return {
       playerId: this.playerId,
-      playerTeamId: this.playerTeamId,
+      teamId: this.teamId,
       card: this.card
     }
   }

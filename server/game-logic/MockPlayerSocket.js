@@ -1,6 +1,7 @@
 const { EventEmitter } = require('events')
 const GameEvents = require('../../shared/constants/GameEvents')
-const { isValidMove } = require('../../shared/utils/cards')
+const { isValidMove } = require('../../shared/utils/round')
+const { getPlayerTeam } = require('../../shared/utils/player')
 const log = require('../../log')(__filename)
 
 const createGuid = () =>
@@ -36,21 +37,19 @@ module.exports = class MockPlayerSocket extends EventEmitter {
   }
 
   makeAMove(gameState) {
-    const { currentSet } = gameState
+    const { currentSet, me, teamA, teamB } = gameState
     const { assetSuit, currentRound } = currentSet
-    const { cards: myCards } = gameState.me
+    const { cards: myCards } = me
+
+    const myTeam = getPlayerTeam([teamA, teamB], me.id)
 
     const cardToPlay = myCards.find(card =>
-      isValidMove(
-        assetSuit,
-        currentRound.moves.map(move => move.card),
-        myCards,
-        card
-      )
+      isValidMove(assetSuit, currentRound.moves, myTeam.id, myCards, card)
     )
 
     if (!cardToPlay) {
-      this.log.error('failed to find a valid move', {
+      debugger
+      log.error('failed to find a valid move', {
         id: this.id,
         myCards,
         currentRound,

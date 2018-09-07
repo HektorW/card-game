@@ -1,14 +1,21 @@
+const { EventEmitter } = require('events')
 const GameSetRound = require('./GameSetRound')
 const { flattenArray } = require('../../shared/utils/array')
+const { getPlayerTeam } = require('../../shared/utils/player')
+const { getWinningMove, getRoundPoints } = require('../../shared/utils/round')
 
-module.exports = class GameSet {
+class GameSet extends EventEmitter {
   constructor(
+    teams,
     allPlayers,
     assetSuit,
     teamAPredictionPoints,
     teamBPredictionPoints,
     startingPlayerId
   ) {
+    super()
+
+    this.teams = teams
     this.allPlayers = allPlayers
 
     this.assetSuit = assetSuit
@@ -18,7 +25,6 @@ module.exports = class GameSet {
 
     this.teamAPoints = 0
     this.teamBPoints = 0
-    this.winningTeamId = null
 
     this.previousRounds = []
     this.currentRound = null
@@ -32,31 +38,44 @@ module.exports = class GameSet {
     }
 
     this.currentRound = new GameSetRound(this.assetSuit, startingPlayerId)
+
+    this.emit(GameSet.Events.StateUpdated)
   }
 
   makeRoundMove(player, move) {
-    if (!this.currentRound.makeMove(player, move)) {
+    const { currentRound } = this
+
+    const playerTeamId = getPlayerTeam(this.teams, player.id)
+    if (!currentRound.makeMove(player, playerTeamId, move)) {
       return false
     }
 
     player.removeCard(move.card)
 
-    const wasLastMoveInRound = this.currentRound.moves.length === 4
+    const wasLastMoveInRound = currentRound.moves.length === 4
     if (wasLastMoveInRound) {
       // Calculate who won and add points
+      const winningMove = getWinningMove(this.assetSuit, currentRound.moves)
+      const roundPoints = getRoundPoints(this.assetSuit, currentRound.moves)
+
+      if (winningMove.teamId === 'a') {
+        this.teamAPoints += roundPoints
+      } else {
+        this.teamBPoints += roundPoints
+      }
 
       const wasLastRoundInSet = player.cards.length === 0
       if (wasLastRoundInSet) {
         // Calculate winning team of set + total points
       } else {
-        setTimeout(() => this.nextRound(), 1000)
+        setTimeout(() => this.nextRound(winningMove.playerId), 1000)
       }
     } else {
       const nextPlayerIndex = (player.index + 1) % 4
       const nextPlayer = this.allPlayers.find(
         player => player.index === nextPlayerIndex
       )
-      this.currentRound.nextPlayerId = nextPlayer.id
+      currentRound.nextPlayerId = nextPlayer.id
     }
 
     return true
@@ -77,8 +96,13 @@ module.exports = class GameSet {
       teamAPoints: this.teamAPoints,
       teamBPoints: this.teamBPoints,
       previousRounds: this.previousRounds.map(round => round.toJSON()),
-      currentRound: this.currentRound.toJSON(),
-      winningTeamId: this.winningTeamId
+      currentRound: this.currentRound.toJSON()
     }
   }
 }
+
+GameSet.Events = {
+  StateUpdated: 'state-updated'
+}
+
+module.exports = GameSet

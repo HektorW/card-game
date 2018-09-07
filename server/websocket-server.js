@@ -5,6 +5,8 @@ const Team = require('./game-logic/Team')
 const MockPlayerSocket = require('./game-logic/MockPlayerSocket')
 const log = require('../log')(__filename)
 
+module.exports.games = {}
+
 module.exports.init = server => {
   const io = socketIO(server)
 
@@ -22,5 +24,7 @@ module.exports.init = server => {
     ])
 
     const game = new Game(teamA, teamB)
+
+    module.exports.games[game.id] = game
   })
 }
