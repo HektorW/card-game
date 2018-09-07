@@ -78,92 +78,6 @@ module.exports = class Game {
     }
 
     this.sendGameStateToPlayers()
-
-    // const { currentRound } = this
-    // this.log.debug('handling move request', {
-    //   playerId: player.id,
-    //   move
-    // })
-    // if (currentRound.nextPlayerId !== player.id) {
-    //   this.log.debug('wrong player tried to make a move', {
-    //     nextPlayerId: this.nextPlayer.id,
-    //     playerId: player.id
-    //   })
-    //   return
-    // }
-    // if (!isValidMove())) {
-    //   this.log.debug('player tried to play invalid card', {
-    //     playerId: player.id,
-    //     playerCards: player.cards,
-    //     move
-    //   })
-    //   return
-    // }
-    // currentRound.moves.push({
-    //   playerId: player.id,
-    //   card: move.card
-    // })
-    // player.removeCard(move.card)
-    // if (currentRound.moves.length === 4) {
-    //   currentRound.nextPlayerId = null
-    //   setTimeout(() => this.finishRound(), 1000)
-    // } else {
-    //   const nextPlayerIndex = (player.index + 1) % 4
-    //   const nextPlayer = this.allPlayers[nextPlayerIndex]
-    //   currentRound.nextPlayerId = nextPlayer.id
-    // }
-    // this.sendGameStateToPlayers()
-  }
-
-  finishRound() {
-    // const { currentRound } = this
-    // this.log.debug('finishing round', { round: currentRound })
-    // const roundWinnerId = this.getRoundWinnerId(currentRound)
-    // const winningPlayer = this.allPlayers.find(
-    //   player => player.id === roundWinnerId
-    // )
-    // const roundScore = this.calculateRoundScore(currentRound)
-    // this.log.debug('winner of round', {
-    //   roundWinnerId,
-    //   roundScore
-    // })
-    // winningPlayer.points += roundScore
-    // const hasMoreCards = winningPlayer.cards.length > 0
-    // if (hasMoreCards) {
-    //   this.previousRounds.push(currentRound)
-    //   this.currentRound = this.createRound(winningPlayer.id)
-    // } else {
-    //   this.finishGame()
-    // }
-    // this.sendGameStateToPlayers()
-  }
-
-  finishGame() {
-    // const winner = this.allPlayers.reduce(
-    //   (currentBestPlayer, player) =>
-    //     player.points > currentBestPlayer.points ? player : currentBestPlayer
-    // )
-    // this.winnerId = winner.id
-    // this.log.debug('finished game', { winnerId: this.winnerId })
-    // this.sendGameStateToPlayers()
-  }
-
-  getRoundWinnerId(round) {
-    // const validSuit = round.moves[0].card.suit
-    // const movesWithValidSuit = round.moves.filter(
-    //   move => move.card.suit === validSuit
-    // )
-    // const moveWithHighestValue = movesWithValidSuit.reduce(
-    //   (currentHighestMove, move) =>
-    //     cardNumberValue(move.card) > cardNumberValue(currentHighestMove.card)
-    //       ? move
-    //       : currentHighestMove
-    // )
-    // return moveWithHighestValue.playerId
-  }
-
-  calculateRoundScore(round) {
-    // return 1
   }
 
   sendGameStateToPlayers() {
@@ -176,10 +90,6 @@ module.exports = class Game {
         teamA: this.teamA.toJSON(),
         teamB: this.teamB.toJSON(),
         me: player.toPrivateJSON()
-        // players: {
-        //   others: otherPlayers.map(otherPlayer => otherPlayer.toPublicJSON()),
-        //   me: player.toPrivateJSON()
-        // }
       })
     })
   }
